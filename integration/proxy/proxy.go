@@ -18,8 +18,8 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	connectip "github.com/quic-go/connect-ip-go"
-	"github.com/quic-go/connect-ip-go/integration/internal/utils"
+	connectip "github.com/Diniboy1123/connect-ip-go"
+	"github.com/Diniboy1123/connect-ip-go/integration/internal/utils"
 
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
@@ -181,7 +181,7 @@ func run(bindTo netip.AddrPort, remoteAddr netip.Addr, route netip.Prefix, ipPro
 	p := connectip.Proxy{}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/vpn", func(w http.ResponseWriter, r *http.Request) {
-		req, err := connectip.ParseRequest(r, template)
+		req, err := connectip.ParseRequest(r, template, "connect-ip")
 		if err != nil {
 			var perr *connectip.RequestParseError
 			if errors.As(err, &perr) {
@@ -229,7 +229,7 @@ func handleConn(conn *connectip.Conn, addr netip.Addr, route netip.Prefix, ipPro
 	go func() {
 		for {
 			b := make([]byte, 1500)
-			n, err := conn.ReadPacket(b)
+			n, err := conn.ReadPacket(b, false)
 			if err != nil {
 				errChan <- fmt.Errorf("failed to read from connection: %w", err)
 				return

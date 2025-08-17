@@ -16,8 +16,8 @@ import (
 	"syscall"
 	"time"
 
-	connectip "github.com/quic-go/connect-ip-go"
-	"github.com/quic-go/connect-ip-go/integration/internal/utils"
+	connectip "github.com/Diniboy1123/connect-ip-go"
+	"github.com/Diniboy1123/connect-ip-go/integration/internal/utils"
 
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
@@ -147,7 +147,7 @@ func establishConn(proxyAddr netip.AddrPort, keyLog io.Writer) (*water.Interface
 	hconn := tr.NewClientConn(conn)
 
 	template := uritemplate.MustNew(fmt.Sprintf("https://proxy:%d/vpn", proxyAddr.Port()))
-	ipconn, rsp, err := connectip.Dial(ctx, hconn, template)
+	ipconn, rsp, err := connectip.Dial(ctx, hconn, template, "connect-ip", http.Header{}, false)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to dial connect-ip connection: %w", err)
 	}
@@ -204,7 +204,7 @@ func proxy(ipconn *connectip.Conn, dev *water.Interface) error {
 	go func() {
 		for {
 			b := make([]byte, 1500)
-			n, err := ipconn.ReadPacket(b)
+			n, err := ipconn.ReadPacket(b, false)
 			if err != nil {
 				errChan <- fmt.Errorf("failed to read from connection: %w", err)
 				return

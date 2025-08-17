@@ -31,7 +31,7 @@ func setupConns(t *testing.T) (client, server *Conn) {
 	connChan := make(chan *Conn, 1)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/connect-ip", func(w http.ResponseWriter, r *http.Request) {
-		mreq, err := ParseRequest(r, template)
+		mreq, err := ParseRequest(r, template, "connect-ip")
 		require.NoError(t, err)
 
 		conn, err := p.Proxy(w, mreq)
@@ -63,7 +63,7 @@ func setupConns(t *testing.T) (client, server *Conn) {
 	tr := &http3.Transport{EnableDatagrams: true}
 	t.Cleanup(func() { tr.Close() })
 
-	client, rsp, err := Dial(ctx, tr.NewClientConn(cconn), template)
+	client, rsp, err := Dial(ctx, tr.NewClientConn(cconn), template, "connect-ip", http.Header{}, false)
 	require.NoError(t, err)
 	require.Equal(t, rsp.StatusCode, http.StatusOK)
 
@@ -177,7 +177,7 @@ func TestTTLs(t *testing.T) {
 		require.Empty(t, icmp)
 
 		receivedPacket := make([]byte, 1500)
-		n, err := server.ReadPacket(receivedPacket)
+		n, err := server.ReadPacket(receivedPacket, false)
 		require.NoError(t, err)
 		receivedPacket = receivedPacket[:n]
 
@@ -223,7 +223,7 @@ func TestTTLs(t *testing.T) {
 		require.Empty(t, icmp)
 
 		receivedPacket := make([]byte, 1500)
-		n, err := server.ReadPacket(receivedPacket)
+		n, err := server.ReadPacket(receivedPacket, false)
 		require.NoError(t, err)
 		receivedPacket = receivedPacket[:n]
 
@@ -273,7 +273,7 @@ func TestClosing(t *testing.T) {
 		}),
 		net.ErrClosed,
 	)
-	_, err = client.ReadPacket([]byte{0})
+	_, err = client.ReadPacket([]byte{0}, false)
 	require.ErrorIs(t, err, net.ErrClosed)
 	_, err = client.WritePacket(ipv6Packet)
 	require.ErrorIs(t, err, net.ErrClosed)
@@ -292,7 +292,7 @@ func TestClosing(t *testing.T) {
 		t.Fatal("timeout")
 	}
 
-	_, err = server.ReadPacket([]byte{0})
+	_, err = server.ReadPacket([]byte{0}, false)
 	require.ErrorIs(t, err, net.ErrClosed)
 	_, err = server.WritePacket(ipv6Packet)
 	require.ErrorIs(t, err, net.ErrClosed)
